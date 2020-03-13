@@ -1,0 +1,15 @@
+secondaryPart/data/split/Alt5/00
+secondaryPart/data/split/Alt5/01
+secondaryPart/data/split/Alt5/02
+secondaryPart/data/split/Alt5/03
+secondaryPart/data/split/Alt5/04
+secondaryPart/data/split/Alt5/05
+secondaryPart/data/split/Alt5/06
+secondaryPart/data/split/Alt5/07
+secondaryPart/data/split/Alt5/08
+secondaryPart/data/split/Alt5/09
+secondaryPart/data/split/Alt5/10
+secondaryPart/data/split/Alt5/11
+secondaryPart/data/split/Alt5/12
+secondaryPart/data/split/Alt5/13
+secondaryPart/data/split/Alt5/14
