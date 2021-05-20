@@ -1,0 +1,358 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage[boxruled, linesnumbered]{algorithm2e}
+
+\title{CmpE321}
+\author{Yunus Kardaş}
+\date{March 2020}
+
+
+\begin{document}
+
+\begin{titlepage}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+
+\center % Center everything on the page
+
+%----------------------------------------------------------------------------------------
+%   HEADING SECTIONS
+%----------------------------------------------------------------------------------------
+
+\textsc{\LARGE BOĞAZİÇİ UNIVERSITY}\\[1.5cm] % Name of your university/college
+\textbf{\Large CMPE 321}\\[0.5cm] % Major heading such as course name
+\textsc{\large PROJECT 1}\\[2cm] % Minor heading such as course title
+
+
+%----------------------------------------------------------------------------------------
+%   TITLE SECTION
+%----------------------------------------------------------------------------------------
+
+\HRule \\[0.4cm]
+{ \huge \bfseries Storage Management System Design}\\[0.3cm] % Title of your document
+\HRule \\[4cm]
+
+%----------------------------------------------------------------------------------------
+%   AUTHOR SECTION
+%----------------------------------------------------------------------------------------
+\textsc{\large Spring 2020}\\[0.5cm] % Minor heading such as course title
+\Large Yunus Kardaş \\ [3cm] % Your name
+
+%----------------------------------------------------------------------------------------
+%   DATE SECTION
+%----------------------------------------------------------------------------------------
+
+{\large March 27, 2020}\\[2cm] % Date, change the \today to a set date if you want to be precise
+\vfill % Fill the rest of the page with whitespace
+\end{titlepage}
+
+\tableofcontents{}
+
+\break
+
+\section{Introduction}
+    In this project, I am expected to design a storage manager system that supports DDL operations and DML. There should be a system catalogue which stores metadata and multiple data files that store the actual data. This document explains my design by showing my assumptions, constraints, data structures and explaining the algorithms behind the DDL and DML operations in pseudocode.  
+\section{Assumptions \& Constraints}
+        \begin{itemize}
+            \item System catalog file has the name SysCat.txt.
+            \item The system shall not allow to create more than one system catalog file or delete an existing one.
+            \item Every character is 1 byte and every integer is 4 bytes.
+            \item A page will be 1400 bytes.
+            \item All of the field values are integer.
+            \item A data type can contain 10 fields provided by user exactly. More fields is not allowed, yet if it contains less field, the remaining fields are considered as null.
+            \item A page cannot hold records of 2 different types, it has to hold at most one type. 
+            \item Two fields of a record cannot have the same name. 
+            \item Field names are at most 10 characters long.
+            \item No two fields of a data type have the same name.
+            \item Data files have the format type-name.txt.
+            \item  A record type can contain at most 10 fields provided by the user. If it contains less,
+            remaining fields considered as null. 
+            \item A file can contain multiple pages.
+            
+        \end{itemize}
+
+\section{Storage Structures}
+    This storage manager contains two components which are System Catalogue and Data Files. 
+    \subsection{System Catalogue}
+       System catalogue is the main file of the store manager. It is responsible for storing the metadata. Any change that can be done in the system via this file. It has the name ‘SysCat.txt’. It has multiple pages. 
+
+        \begin{itemize}
+          \item Page Header (8 bytes)
+            \begin{itemize}
+                 \item Page ID (4 bytes)
+                 \item \# of Records (4 bytes)
+            \end{itemize}
+          \item Record (115 bytes)
+            \begin{itemize}
+                 \item Record Header (15 bytes)
+                    \begin{itemize}
+                        \item Type Name (10 bytes)
+                        \item \# of Fields (4 bytes)
+                        \item Deletion Status (isDeleted)(1 byte)
+                    \end{itemize}
+                 \item Field Names (10 x 10 = 100 bytes)
+            \end{itemize}
+        \end{itemize}
+
+        \begin{table}[h!]
+                \begin{center}
+                    \begin{tabular}{ | c | c | c | c | c | c | }
+                    \hline
+                        \multicolumn{3}{||c|}{Page ID} &
+                        \multicolumn{3}{|c||}{\# of Records} \\
+                    \hline
+                        \multicolumn{3}{||c|}{Record Header} &
+                        \multicolumn{3}{|c||}{Field Names} \\
+                    \hline
+                    \hline
+                    Type Name 1 & \# of Fields & Field Name 1 & Field Name 2 & ... & Field Name 10 \\
+                    \hline
+                    Type Name 2 & \# of Fields & Field Name 1 & Field Name 2 & ... & Field Name 10 \\
+                    \hline
+                    ... & ... & ... & ... & ... & ... \\
+                    \hline
+                    Type Name 10 & \# of Fields & Field Name 1 & Field Name 2 & ... & Field Name 10 \\
+                    \hline
+                    \end{tabular}
+                \end{center}
+           
+        \end{table}
+
+    \subsection{Data Files}
+       Data files store actual datas. Each data file can store at most one type of record. Data files have the name type-name.txt. Each page in a data file can store at most 32 records. 
+        \subsubsection{Pages}
+            Page headers store information about the specific page it belongs to.
+            \begin{itemize}
+              \item Page Header (13 bytes)
+                \begin{itemize}
+                     \item Page ID (4 bytes)
+                     \item \# of Records (4 bytes)
+                     \item isEmpty (1 byte)
+                     \item Pointer to Next Page (4 bytes)
+                \end{itemize}
+              \item Records (a Record = 46 bytes)
+            \end{itemize}
+        \subsubsection{Records}
+            \begin{itemize}
+              \item Record Header (6 bytes)
+                \begin{itemize}
+                     \item Record ID (4 bytes)
+                    \item isEmpty (1 bytes)
+                \end{itemize}
+              \item Fields (10 x 4 = 40 bytes)
+            \end{itemize}
+
+        \begin{table}[h!]
+            \begin{center}
+                \begin{tabular}{ | c | c | c | c | c | c | }
+                \hline
+                    \multicolumn{1}{||c|}{Page ID} &
+                    \multicolumn{2}{|c|}{Pointer to Next Page} &
+                    \multicolumn{2}{|c|}{\# of Records} &
+                    \multicolumn{1}{|c||}{isEmpty} \\
+                \hline
+                
+                    \multicolumn{3}{||c|}{Record Header} &
+                        \multicolumn{3}{|c||}{Field Names} \\
+                \hline
+                \hline
+                Record ID 1 & isEmpty & Field 1 & Field 2 & ... & Field 10 \\
+                \hline
+                Record ID 2 & isEmpty & Field 1 & Field 2 & ... & Field 10 \\
+                \hline
+                ... & ... & ... & ... & ... & ... \\
+                \hline
+                Record ID 30 & isEmpty & Field 1 & Field 2 & ... & Field 10 \\
+                \hline
+                \end{tabular}
+            \end{center}
+    
+    \end{table}
+
+\section{Operations}
+    \subsection{DDL Operations}
+        \subsubsection{Create a type}
+        \IncMargin{1em}
+            \begin{algorithm}[H]
+                \SetNlSty{texttt}{}{:}
+                \SetAlgoLined
+                 \textbf{function} creatType \\
+                 \textbf{declare} recordType \\
+                 recordType $\leftarrow$ User Input \\
+                 recordType.numberOfFields $\leftarrow$ User Input \\
+                 
+                 \For{ integer i=0 to recordType.numberOfFields}{
+                   recordType.fields[i].name $\leftarrow$ User Input
+                 }
+                 \If{recordType.numberOfField is smaller than 10 }{
+                 \For{ int i=recordType.numOfFields+1 to 10 }{
+                    recordType.fields[1].name $\leftarrow$ (NULL) 
+                 }}
+                 file $\leftarrow$ open("SysCat.txt") \\
+                 write file recordType \\
+                 file.pageHeader.numberOfRecords++ \\
+                 ccreateFile(‘recordType.name.txt’)
+                 
+            \end{algorithm}
+        \DecMargin{1em}
+        \subsubsection{Delete a type}
+        \IncMargin{1em}
+            \begin{algorithm}[H]
+                \SetNlSty{texttt}{}{:}
+                \SetAlgoLined
+                 \textbf{function} deleteType \\
+                 file $\leftarrow$ findFile(recordsTypeName) \\
+                  \textbf{delete} file \\
+                  catalogue $\leftarrow$ open(‘SysCat.txt’) \\
+                 deleteFile(nameOfType.txt) \\
+                 file $\leftarrow$ open("SysCat.txt") \\
+                 \For{ each page in catalogue }{
+                   \For{each record in page}{
+                   \If{record.typeName = recordTypeName}{
+                   record.isDeleted $\leftarrow$ 1 
+                   }}
+                 }
+                 
+            \end{algorithm}
+        \DecMargin{1em}
+        \subsubsection{List all types}
+            \IncMargin{1em}
+                \begin{algorithm}[H]
+                    \SetNlSty{texttt}{}{:}
+                    \SetAlgoLined
+                    \textbf{function} listAllTypes \\
+                    \textbf{declare} types \\
+                     file $\leftarrow$ open("SysCat.txt") \\
+                     \For{each page in file }{
+                     \For{each record in page }{
+                     \If{record.isDeleted=0 }{
+                     types.push(record.typeName) 
+                     }}}
+                     
+                \end{algorithm}
+            \DecMargin{1em}
+            
+
+    \subsection{DML Operations}
+      \subsubsection{Create a record}
+            \IncMargin{1em}
+                \begin{algorithm}[H]
+                    \SetNlSty{texttt}{}{:}
+                    \SetAlgoLined
+                    \textbf{function} createRecord \\
+                    recordType $\leftarrow$ User Input \\
+                    file $\leftarrow$ open(‘SysCat.txt’) \\
+                    numOfFields $\leftarrow$ file.recordType.numberOfFields \\
+                    recordFile $\leftarrow$ open(‘recordType.txt’) \\
+                    \For{each currentPage in recordFile}{
+                        \If{page.pageHeader.numberOfRecords \leq 31}{
+                            lastPage $\leftarrow$ page \\
+                            
+                        }
+                    }
+                    lastPage.pageHeader.numberOfRecords++ \\
+                    \For{ each record in lastPage}{
+                        \If{record.isEmpty = 1}{
+                            record.isEmpty  $\leftarrow$ 0 \\
+                            \For{i = 0 to numOfFields }{
+                                record[i] $\leftarrow$ User Input
+                            }
+                            record.isEmpty $\leftarrow$ 0 
+                        }
+                    }
+                     
+                \end{algorithm}
+            \DecMargin{1em}
+        \subsubsection{Delete a record}
+            \IncMargin{1em}
+                \begin{algorithm}[H]
+                    \SetNlSty{texttt}{}{:}
+                    \SetAlgoLined
+                    \textbf{function} deleteRecord \\
+                    recordType $\leftarrow$ User Input \\
+                    primaryKey $\leftarrow$ User Input \\
+                    file $\leftarrow$ open(recordType.txt) \\
+                    \For{ each page in file}{
+                        \For{each record in page}{
+                            \If{record.isDeleted = 0 \textbf{and} record.id = primaryKey }{
+                                page.pageHeader.numberOfRecords - - \\
+                                record.isDeleted  $\leftarrow$ 1 \\
+                                record.isEmpty $\leftarrow$ 1 \\
+                                
+                            }
+                        }
+                    }
+                    
+                \end{algorithm}
+            \DecMargin{1em}
+        \subsubsection{Search for a record}
+            \IncMargin{1em}
+                \begin{algorithm}[H]
+                    \SetNlSty{texttt}{}{:}
+                    \SetAlgoLined
+                    \textbf{function} searchRecord \\
+                    \textbf{declare} searchedRecord \\
+                    recordType $\leftarrow$ User Input \\
+                    primaryKey $\leftarrow$ User Input \\
+                    file $\leftarrow$ open(recordType.txt) \\
+                    \For{each page in a file}{
+                        \For{each record in a page}{
+                            \If{record.id = primaryKey \textbf{and} record.isDeleted = 0 }{
+                                searchedRecord $\leftarrow$ record 
+                                
+                            }
+                        }
+                    }
+                    \textbf{return} searchedRecord
+                     
+                \end{algorithm}
+            \DecMargin{1em}
+            \subsubsection{Update a record}
+            \IncMargin{1em}
+                \begin{algorithm}[H]
+                    \SetNlSty{texttt}{}{:}
+                    \SetAlgoLined
+                    \textbf{function} updateRecord \\
+                    \textbf{declare} updatedRecord \\
+                    recordType $\leftarrow$ User Input \\
+                    primaryKey $\leftarrow$ User Input \\
+                    updatedRecord $\leftarrow$ User Input \\
+                    file $\leftarrow$ open(recordType.txt) \\
+                    \For{each page in a file}{
+                        \For{each record in a record}{
+                            \If{record.id = primaryKey \textbf{and} record.isDeleted = 0}{
+                                record $\leftarrow$ updatedRecord
+                                }}}
+                    
+                     
+                \end{algorithm}
+            \DecMargin{1em}
+        \subsubsection{List all records of a type}
+            \IncMargin{1em}
+                \begin{algorithm}[H]
+                    \SetNlSty{texttt}{}{:}
+                    \SetAlgoLined
+                    \textbf{function} listRecords \\
+                    \textbf{declare} allRecords \\
+                    recordType $\leftarrow$ User Input \\
+                    file $\leftarrow$ open(recordType.txt) \\
+                    \For{each page in file}{
+                        \For{each record in page}{
+                            \If{record.isDeleted textbf{and} record.isEmpty = 0 }{
+                                allRecords.push(record)
+                            }
+                        }
+                    }
+                    \textbf{return} allRecords
+                     
+                \end{algorithm}
+            \DecMargin{1em}
+            
+
+{\LARGE .}\\[2cm]\\
+\section{Conclusions \& Assessment}
+    In this project, I have designed a simple storage manager which has a system catalogue file and data files. In my design each file can hold at most one record type and can have at most 100 pages. This makes accessing a record with its primary key faster but insertion is slower since we have to access a specific page to insert a record. Since we didn’t do any error checking, if a user enters a wrong input, this storage manager cannot handle it. Also because of fixed page structure we lose some memory that we might be able to use in storing more data. To sum up, this is a really simple storage manager design and it has its own pros and cons. But mostly, it is very efficient while accessing a record but not so much while insertion. But we can modify this design and improve it. 
+\end{document}
+
