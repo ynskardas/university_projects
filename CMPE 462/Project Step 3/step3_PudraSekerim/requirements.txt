@@ -1,0 +1,10 @@
+pandas
+matplotlib
+sklearn
+numpy
+zipfile
+glob
+os
+shutil
+numpy
+
